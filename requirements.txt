@@ -1,0 +1,7 @@
+Flask
+pywebview
+youtube-transcript-api
+openai-whisper
+yt-dlp
+ffmpeg-python
+requests
