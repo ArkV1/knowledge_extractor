@@ -1,10 +1,7 @@
-from flask import Blueprint, request, jsonify
-from web.socketio import socketio
-from transcriptions.transcribe import (
-    get_youtube_transcript, download_audio, transcribe_with_whisper, 
-    extract_video_id, highlight_differences
-)
 import os
+from flask import Blueprint, request, jsonify
+from transcriptions.transcribe import highlight_differences, extract_video_id, get_youtube_transcript, transcribe_with_whisper, download_audio
+from web.socketio import socketio
 
 api_bp = Blueprint('api', __name__)
 
@@ -59,10 +56,10 @@ def compare():
             comparison_result = highlight_differences(youtube_transcript, whisper_transcript, mode='inline')
             return jsonify({'comparison_result': comparison_result, 'mode': 'inline'})
         elif comparison_mode == 'side_by_side':
-            youtube_result, whisper_result = highlight_differences(youtube_transcript, whisper_transcript, mode='side_by_side')
+            youtube_highlighted, whisper_highlighted = highlight_differences(youtube_transcript, whisper_transcript, mode='side_by_side')
             return jsonify({
-                'youtube_result': youtube_result, 
-                'whisper_result': whisper_result, 
+                'youtube_result': youtube_highlighted, 
+                'whisper_result': whisper_highlighted, 
                 'mode': 'side_by_side'
             })
         else:

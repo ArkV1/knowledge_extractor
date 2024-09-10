@@ -36,18 +36,24 @@ export function initTranscriptionManager(elements, uiManager) {
     function handleTranscriptionResponse(data) {
         if (data.youtube_result) {
             elements.youtubeResult.innerText = data.youtube_result;
-            elements.youtubeResultBox.querySelector('.refresh-button').classList.remove('hidden');
+            const youtubeRefreshButton = elements.youtubeResultBox.querySelector('.refresh-button');
+            if (youtubeRefreshButton) {
+                youtubeRefreshButton.classList.remove('hidden');
+            }
         }
         if (data.whisper_result) {
             elements.whisperResult.innerText = data.whisper_result;
-            elements.whisperResultBox.querySelector('.refresh-button').classList.remove('hidden');
+            const whisperRefreshButton = elements.whisperResultBox.querySelector('.refresh-button');
+            if (whisperRefreshButton) {
+                whisperRefreshButton.classList.remove('hidden');
+            }
         }
         elements.progressText.innerText = 'Transcription complete';
         elements.progressBar.style.width = '100%';
 
         const selectedMethod = document.querySelector('input[name="method"]:checked').value;
-        uiManager.updateResultBoxesVisibility(selectedMethod);
         uiManager.updateUI();
+        uiManager.updateComparisonButtons();
     }
 
     function handleTranscriptionError(error) {
@@ -77,6 +83,7 @@ export function initTranscriptionManager(elements, uiManager) {
                 } else {
                     resultBox.innerText = data.whisper_result;
                 }
+                uiManager.updateComparisonButtons();
             })
             .catch(error => {
                 console.error('Error:', error);

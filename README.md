@@ -1,13 +1,16 @@
 # YouTube Video Transcription Tool
 
-This Python project automates the process of downloading YouTube videos, extracting audio, and transcribing them using OpenAI's Whisper model. The project works both as a **desktop application** (via PyWebView) and as a **web application** (via Flask). You can use either **YouTube’s auto-generated transcript** or **OpenAI Whisper** for transcription.
+This Python project automates the process of downloading YouTube videos, extracting audio, and transcribing them using OpenAI's Whisper model or YouTube's auto-generated transcripts. The project works both as a **desktop application** (via PyWebView) and as a **web application** (via Flask).
 
 ## Features
 
 - Download audio from YouTube videos.
-- Transcribe audio to text using OpenAI Whisper.
+- Transcribe audio using OpenAI's Whisper model with multiple model size options.
 - Fetch YouTube's auto-generated transcripts.
+- Compare transcriptions from both YouTube and Whisper side-by-side or inline.
 - Run the app as both a desktop application (via PyWebView) and a web app (via Flask).
+- Real-time progress updates using WebSockets.
+- Responsive design for various screen sizes.
 
 ## Prerequisites
 
@@ -40,7 +43,7 @@ Before you begin, ensure you have met the following requirements:
     ```
 
 4. **Create a `.env` file**:
-    The `.env` file is used to set the environment for the application. You can create one in the root directory of the project with the following content:
+    The `.env` file is used to set the environment for the application. Create one in the root directory of the project with the following content:
 
     - For development:
       ```plaintext
@@ -56,8 +59,6 @@ Before you begin, ensure you have met the following requirements:
 
 ### Development Mode (with Hot Reload)
 
-When running the app in development mode, **Flask** will enable **hot reload**, and you can access the app through your web browser.
-
 1. Set `FLASK_ENV=development` in your `.env` file.
 2. Run the app:
    ```bash
@@ -65,11 +66,7 @@ When running the app in development mode, **Flask** will enable **hot reload**, 
    ```
 3. Open the browser and go to `http://127.0.0.1:5000` to access the app.
 
-In **development mode**, **PyWebView** is not used so you can easily debug and reload the app in the browser as you make changes.
-
 ### Production Mode (PyWebView Desktop App)
-
-In production mode, the app will run as a **desktop application** using **PyWebView**.
 
 1. Set `FLASK_ENV=production` in your `.env` file.
 2. Run the app:
@@ -77,15 +74,7 @@ In production mode, the app will run as a **desktop application** using **PyWebV
    python app.py
    ```
 
-The app will launch a native desktop window powered by **PyWebView**.
-
-- **PyWebView** will wait for the Flask server to be fully up and running before opening the window.
-- The app behaves like a local desktop application, but the back-end is powered by Flask.
-
-### Important Notes:
-
-- **In Development Mode**: Flask runs with hot reload enabled, making it easier to develop and test.
-- **In Production Mode**: PyWebView launches a native window and Flask runs in the background.
+The app will launch a native desktop window powered by PyWebView.
 
 ## Usage
 
@@ -93,30 +82,35 @@ The app will launch a native desktop window powered by **PyWebView**.
 2. Choose the transcription method:
     - **YouTube's Own Transcription**: Fetch the transcript directly from YouTube if available.
     - **OpenAI Whisper Transcription**: Download the audio and transcribe it using Whisper.
-3. The result will be displayed in the output area.
+    - **Compare Both Transcriptions**: Generate both transcripts and allow comparison.
+3. If using Whisper, select the model size (affects accuracy and speed).
+4. Click "Submit" to start the transcription process.
+5. View the results in the transcription results section.
+6. Use the "Inline Compare" or "Side-by-Side Compare" buttons to compare transcriptions when both are available.
+7. Use the "Refresh" button on individual transcripts to re-fetch or re-generate them.
+
+## Comparison Features
+
+- **Inline Comparison**: Shows differences between YouTube and Whisper transcripts in a single view. Deletions (words in YouTube but not in Whisper) are highlighted in red, while insertions (words in Whisper but not in YouTube) are highlighted in green.
+- **Side-by-Side Comparison**: Displays YouTube and Whisper transcripts side by side, with differences highlighted in each.
 
 ## Dependencies
 
-The project relies on the following Python libraries, listed in `requirements.txt`:
-- `Flask`
-- `pywebview`
-- `youtube-transcript-api`
-- `openai-whisper`
-- `yt-dlp`
-- `ffmpeg-python`
-- `requests`
-- `python-dotenv`
-
-You can update the `requirements.txt` file if necessary by running:
-```bash
-pip freeze > requirements.txt
-```
+The project relies on the following Python libraries:
+- Flask
+- PyWebView
+- youtube-transcript-api
+- openai-whisper
+- yt-dlp
+- FFmpeg-python
+- requests
+- python-dotenv
+- Flask-SocketIO
 
 ## Contributing
 
-If you'd like to contribute, feel free to submit a pull request or file an issue.
+If you'd like to contribute, please fork the repository and use a feature branch. Pull requests are warmly welcome.
 
 ## License
 
 This project is open-source and available under the [MIT License](LICENSE).
-```

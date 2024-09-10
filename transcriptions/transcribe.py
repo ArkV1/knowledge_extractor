@@ -102,23 +102,46 @@ def highlight_differences(text1, text2, mode='inline'):
             result.extend(words2[j1:j2])
             result.append('</span>')
 
-    reconstructed = []
-    capitalize_next = True
-    for token in result:
-        if token in ('.', '!', '?'):
-            capitalize_next = True
-        elif re.match(r'\w', token):
-            if capitalize_next:
-                token = token.capitalize()
-                capitalize_next = False
-            if reconstructed and reconstructed[-1] not in (' ', "'"):
-                reconstructed.append(' ')
-        reconstructed.append(token)
+    def reconstruct(tokens):
+        reconstructed = []
+        capitalize_next = True
+        for token in tokens:
+            if token in ('.', '!', '?'):
+                capitalize_next = True
+            elif re.match(r'\w', token):
+                if capitalize_next:
+                    token = token.capitalize()
+                    capitalize_next = False
+                if reconstructed and reconstructed[-1] not in (' ', "'"):
+                    reconstructed.append(' ')
+            reconstructed.append(token)
+        return ''.join(reconstructed)
 
     if mode == 'inline':
-        return ''.join(reconstructed)
+        return reconstruct(result)
     else:  # side-by-side mode
-        return text1, text2
+        result1 = []
+        result2 = []
+        for op, i1, i2, j1, j2 in matcher.get_opcodes():
+            if op == 'equal':
+                result1.extend(words1[i1:i2])
+                result2.extend(words2[j1:j2])
+            elif op == 'delete':
+                result1.append('<span class="bg-red-200">')
+                result1.extend(words1[i1:i2])
+                result1.append('</span>')
+            elif op == 'insert':
+                result2.append('<span class="bg-green-200">')
+                result2.extend(words2[j1:j2])
+                result2.append('</span>')
+            elif op == 'replace':
+                result1.append('<span class="bg-red-200">')
+                result1.extend(words1[i1:i2])
+                result1.append('</span>')
+                result2.append('<span class="bg-green-200">')
+                result2.extend(words2[j1:j2])
+                result2.append('</span>')
+        return reconstruct(result1), reconstruct(result2)
 
 # Alias for backward compatibility
 highlight_differences_inline = highlight_differences

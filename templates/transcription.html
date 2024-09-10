@@ -27,22 +27,21 @@
             <label class="block text-sm font-medium text-gray-700">Select Transcription Method:</label>
             <div class="mt-2 space-y-2">
                 <div>
-                    <input type="radio" id="youtube" name="method" value="YouTube" checked
-                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                    <input type="radio" id="youtube" name="method" value="YouTube" {% if method=='YouTube' %}checked{%
+                        endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                     <label for="youtube" class="ml-3 text-sm font-medium text-gray-700">YouTube's Own
                         Transcription</label>
                 </div>
                 <div>
-                    <input type="radio" id="whisper" name="method" value="Whisper"
-                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                    <input type="radio" id="whisper" name="method" value="Whisper" {% if method=='Whisper' %}checked{%
+                        endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                     <label for="whisper" class="ml-3 text-sm font-medium text-gray-700">OpenAI Whisper
                         Transcription</label>
                 </div>
                 <div>
-                    <input type="radio" id="both" name="method" value="Both"
+                    <input type="radio" id="both" name="method" value="Both" {% if method=='Both' %}checked{% endif %}
                         class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                    <label for="both" class="ml-3 text-sm font-medium text-gray-700">Compare Both
-                        Transcriptions</label>
+                    <label for="both" class="ml-3 text-sm font-medium text-gray-700">Compare Both Transcriptions</label>
                 </div>
             </div>
         </div>
@@ -109,7 +108,7 @@
             </div>
 
             <div id="comparison-result-box"
-                class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden overflow-auto max-h-screen">
+                class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden overflow-auto max-h-screen col-span-full">
                 <div class="flex justify-between items-center mb-2">
                     <h4 class="font-bold text-gray-800">Comparison:</h4>
                     <button id="compare-back-button"
@@ -117,9 +116,8 @@
                         Back to Transcripts
                     </button>
                 </div>
-                <div id="comparison-result">
-                    <div id="youtube-comparison" class="bg-gray-50 p-4 border border-gray-200 rounded-lg mb-4"></div>
-                    <div id="whisper-comparison" class="bg-gray-50 p-4 border border-gray-200 rounded-lg"></div>
+                <div id="comparison-result" class="w-full">
+                    <!-- Comparison content will be inserted here dynamically -->
                 </div>
             </div>
         </div>

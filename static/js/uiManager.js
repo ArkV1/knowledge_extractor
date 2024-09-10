@@ -27,20 +27,31 @@ export function initUIManager(elements) {
 
     function updateUI() {
         const selectedMethod = document.querySelector('input[name="method"]:checked').value;
-        
-        toggleWhisperModelContainer(selectedMethod);
 
-        elements.youtubeResultBox.classList.toggle('hidden', selectedMethod === 'Whisper');
-        elements.whisperResultBox.classList.toggle('hidden', selectedMethod === 'YouTube');
-        
-        const resultsContainer = document.getElementById('results-container');
-        resultsContainer.classList.toggle('md:grid-cols-2', selectedMethod === 'Both');
+        toggleWhisperModelContainer(selectedMethod);
+        updateResultBoxesVisibility(selectedMethod);
 
         if (elements.youtubeResult.innerText || elements.whisperResult.innerText) {
             showResultsSection();
         } else {
             hideResultsSection();
         }
+
+        updateComparisonButtons();
+    }
+
+    function updateResultBoxesVisibility(selectedMethod) {
+        elements.youtubeResultBox.classList.toggle('hidden', selectedMethod === 'Whisper');
+        elements.whisperResultBox.classList.toggle('hidden', selectedMethod === 'YouTube');
+
+        const resultsContainer = document.getElementById('results-container');
+        resultsContainer.classList.toggle('md:grid-cols-2', selectedMethod === 'Both');
+    }
+
+    function updateComparisonButtons() {
+        const showButtons = elements.youtubeResult.innerText && elements.whisperResult.innerText;
+        elements.inlineCompareButton.classList.toggle('hidden', !showButtons);
+        elements.sideBySideCompareButton.classList.toggle('hidden', !showButtons);
     }
 
     function showResultsSection() {
@@ -72,6 +83,28 @@ export function initUIManager(elements) {
         }
     }
 
+    function showComparisonResult() {
+        elements.youtubeResultBox.classList.add('hidden');
+        elements.whisperResultBox.classList.add('hidden');
+        elements.comparisonResultBox.classList.remove('hidden');
+        elements.inlineCompareButton.classList.add('hidden');
+        elements.sideBySideCompareButton.classList.add('hidden');
+        elements.mainContainer.style.maxWidth = '100%'; // Ensure full width
+    }
+
+    function hideComparisonResult() {
+        elements.comparisonResultBox.classList.add('hidden');
+        updateResultBoxesVisibility(document.querySelector('input[name="method"]:checked').value);
+        updateComparisonButtons();
+        elements.mainContainer.style.maxWidth = '800px'; // Reset to original max-width
+    }
+
+    function initUI() {
+        const selectedMethod = document.querySelector('input[name="method"]:checked').value;
+        toggleWhisperModelContainer(selectedMethod);
+        updateResultBoxesVisibility(selectedMethod);
+    }
+
     function bindEvents(transcriptionManager, comparisonManager) {
         elements.transcriptionForm.addEventListener('submit', transcriptionManager.handleFormSubmit);
         elements.methodRadios.forEach(radio => radio.addEventListener('change', updateUI));
@@ -89,8 +122,9 @@ export function initUIManager(elements) {
         });
     }
 
-    // Call this function when the page loads to hide the results section initially
+    // Call these functions when the page loads
     hideResultsSection();
+    initUI();
 
     return {
         resetUI,
@@ -100,6 +134,10 @@ export function initUIManager(elements) {
         toggleWhisperModelContainer,
         bindEvents,
         showResultsSection,
-        hideResultsSection
+        hideResultsSection,
+        updateResultBoxesVisibility,
+        updateComparisonButtons,
+        showComparisonResult,
+        hideComparisonResult
     };
 }
