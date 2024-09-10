@@ -5,7 +5,6 @@ import re
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 from difflib import SequenceMatcher
 
-# Updated get_youtube_transcript to remain unchanged
 def get_youtube_transcript(video_id):
     try:
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
@@ -18,7 +17,6 @@ def get_youtube_transcript(video_id):
     except Exception as e:
         return f"Error fetching YouTube transcript: {str(e)}"
 
-# Modified download_audio to accept socketio for emitting events
 def download_audio(video_url, output_dir="downloads", socketio=None):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -44,21 +42,28 @@ def download_audio(video_url, output_dir="downloads", socketio=None):
         'progress_hooks': [progress_hook],
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            if socketio:
+                socketio.emit('progress', {'status': 'Starting download...'})
+            info_dict = ydl.extract_info(video_url, download=True)
+            file_path = ydl.prepare_filename(info_dict)
+            file_path = os.path.splitext(file_path)[0] + '.mp3'
+            
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"The file {file_path} was not found after download and conversion.")
+            
+            return file_path
+    except Exception as e:
         if socketio:
-            socketio.emit('progress', {'status': 'Starting download...'})
-        info_dict = ydl.extract_info(video_url, download=True)
-        file_path = os.path.join(output_dir, f"{info_dict['title']}.mp3")
-    
-    return file_path
+            socketio.emit('progress', {'status': f'Error during download: {str(e)}'})
+        raise
 
-# transcribe_with_whisper remains unchanged
 def transcribe_with_whisper(audio_file, model_name):
     model = whisper.load_model(model_name)
     result = model.transcribe(audio_file)
     return result["text"]
 
-# extract_video_id remains unchanged
 def extract_video_id(url):
     if "v=" in url:
         video_id = url.split("v=")[1]
@@ -68,12 +73,12 @@ def extract_video_id(url):
     else:
         return None
 
-def highlight_differences(text1, text2):
-    def split_into_words(text):
-        return re.findall(r'\S+|\s+', text)
+def highlight_differences(text1, text2, mode='inline'):
+    def tokenize(text):
+        return re.findall(r'\w+|[^\w\s]', text.lower())
 
-    words1 = split_into_words(text1)
-    words2 = split_into_words(text2)
+    words1 = tokenize(text1)
+    words2 = tokenize(text2)
 
     matcher = SequenceMatcher(None, words1, words2)
     result = []
@@ -97,4 +102,23 @@ def highlight_differences(text1, text2):
             result.extend(words2[j1:j2])
             result.append('</span>')
 
-    return ''.join(result)
+    reconstructed = []
+    capitalize_next = True
+    for token in result:
+        if token in ('.', '!', '?'):
+            capitalize_next = True
+        elif re.match(r'\w', token):
+            if capitalize_next:
+                token = token.capitalize()
+                capitalize_next = False
+            if reconstructed and reconstructed[-1] not in (' ', "'"):
+                reconstructed.append(' ')
+        reconstructed.append(token)
+
+    if mode == 'inline':
+        return ''.join(reconstructed)
+    else:  # side-by-side mode
+        return text1, text2
+
+# Alias for backward compatibility
+highlight_differences_inline = highlight_differences

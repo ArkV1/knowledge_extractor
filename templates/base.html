@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}YouTube Transcriber{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <!-- Side Panel -->
+        <div id="side-panel" class="w-64 bg-white shadow-lg p-4 flex flex-col">
+            <div class="flex-grow">
+                <h2 class="text-lg font-semibold mb-2">History</h2>
+                <ul id="history-list" class="space-y-2">
+                    <!-- History items will be added here dynamically -->
+                </ul>
+            </div>
+            <div>
+                <h2 class="text-lg font-semibold mb-2">Settings</h2>
+                <div class="space-y-2">
+                    <!-- Add any settings here if needed -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8 overflow-y-auto">
+            {% block content %}
+            <!-- Content will be inserted here -->
+            {% endblock %}
+        </div>
+    </div>
+
+    {% block scripts %}
+    <script type="module" src="/static/js/main.js"></script>
+    {% endblock %}
+</body>
+</html>

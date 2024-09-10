@@ -1,6 +1,9 @@
 from flask import Blueprint, request, jsonify
-from web.socketio import socketio  # Import socketio from the new file
-from transcriptions.transcribe import get_youtube_transcript, download_audio, transcribe_with_whisper, extract_video_id, highlight_differences
+from web.socketio import socketio
+from transcriptions.transcribe import (
+    get_youtube_transcript, download_audio, transcribe_with_whisper, 
+    extract_video_id, highlight_differences
+)
 import os
 
 api_bp = Blueprint('api', __name__)
@@ -28,7 +31,7 @@ def transcribe():
 
     if method == "Whisper" or method == "Both":
         socketio.emit('progress', {'status': 'Starting audio download...'})
-        audio_file = download_audio(url, socketio=socketio)  # Pass socketio here
+        audio_file = download_audio(url, socketio=socketio)
         socketio.emit('progress', {'status': f'Transcribing with Whisper ({whisper_model} model)...'})
         whisper_result = transcribe_with_whisper(audio_file, whisper_model)
         os.remove(audio_file)
@@ -46,12 +49,23 @@ def compare():
     data = request.json
     youtube_transcript = data.get('youtube_transcript')
     whisper_transcript = data.get('whisper_transcript')
+    comparison_mode = data.get('comparison_mode', 'inline')
     
     if not youtube_transcript or not whisper_transcript:
         return jsonify({'error': 'Both YouTube and Whisper transcripts are required.'}), 400
     
     try:
-        comparison_result = highlight_differences(youtube_transcript, whisper_transcript)
-        return jsonify({'comparison_result': comparison_result})
+        if comparison_mode == 'inline':
+            comparison_result = highlight_differences(youtube_transcript, whisper_transcript, mode='inline')
+            return jsonify({'comparison_result': comparison_result, 'mode': 'inline'})
+        elif comparison_mode == 'side_by_side':
+            youtube_result, whisper_result = highlight_differences(youtube_transcript, whisper_transcript, mode='side_by_side')
+            return jsonify({
+                'youtube_result': youtube_result, 
+                'whisper_result': whisper_result, 
+                'mode': 'side_by_side'
+            })
+        else:
+            return jsonify({'error': 'Invalid comparison mode.'}), 400
     except Exception as e:
         return jsonify({'error': f'Error during comparison: {str(e)}'}), 500
