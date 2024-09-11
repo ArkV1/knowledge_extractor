@@ -5,35 +5,38 @@ export function initTranscriptionManager(elements, uiManager) {
         const method = document.querySelector('input[name="method"]:checked').value;
         const whisperModel = document.getElementById('whisper-model').value;
 
+        // Reset the UI and show the progress bar while hiding the results section
         uiManager.resetUI();
         uiManager.showProgress('Starting transcription...');
+        uiManager.hideResultsSection();  // Ensure the results section stays hidden initially
 
         fetch('/api/transcribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url, method, whisperModel }),
         })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(text => {
-                try {
-                    return JSON.parse(text);
-                } catch (error) {
-                    console.error('Error parsing JSON:', error);
-                    console.error('Received text:', text);
-                    throw new Error('Invalid JSON response from server');
-                }
-            })
-            .then(handleTranscriptionResponse)
-            .catch(handleTranscriptionError)
-            .finally(uiManager.hideProgress);
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (error) {
+                console.error('Error parsing JSON:', error);
+                console.error('Received text:', text);
+                throw new Error('Invalid JSON response from server');
+            }
+        })
+        .then(handleTranscriptionResponse)
+        .catch(handleTranscriptionError)
+        .finally(uiManager.hideProgress);  // Ensure the progress is hidden once finished
     }
 
     function handleTranscriptionResponse(data) {
+        // Process YouTube transcript
         if (data.youtube_result) {
             elements.youtubeResult.innerText = data.youtube_result;
             const youtubeRefreshButton = elements.youtubeResultBox.querySelector('.refresh-button');
@@ -41,6 +44,8 @@ export function initTranscriptionManager(elements, uiManager) {
                 youtubeRefreshButton.classList.remove('hidden');
             }
         }
+        
+        // Process Whisper transcript
         if (data.whisper_result) {
             elements.whisperResult.innerText = data.whisper_result;
             const whisperRefreshButton = elements.whisperResultBox.querySelector('.refresh-button');
@@ -48,10 +53,12 @@ export function initTranscriptionManager(elements, uiManager) {
                 whisperRefreshButton.classList.remove('hidden');
             }
         }
+
         elements.progressText.innerText = 'Transcription complete';
         elements.progressBar.style.width = '100%';
 
-        const selectedMethod = document.querySelector('input[name="method"]:checked').value;
+        // Show results section and adjust UI width after transcription completes
+        uiManager.showResultsSection();
         uiManager.updateUI();
         uiManager.updateComparisonButtons();
     }
@@ -76,22 +83,22 @@ export function initTranscriptionManager(elements, uiManager) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url, method, whisperModel }),
         })
-            .then(response => response.json())
-            .then(data => {
-                if (boxId === 'youtube-result') {
-                    resultBox.innerText = data.youtube_result;
-                } else {
-                    resultBox.innerText = data.whisper_result;
-                }
-                uiManager.updateComparisonButtons();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                resultBox.innerText = 'An error occurred while refreshing the transcript.';
-            })
-            .finally(() => {
-                this.disabled = false;
-            });
+        .then(response => response.json())
+        .then(data => {
+            if (boxId === 'youtube-result') {
+                resultBox.innerText = data.youtube_result;
+            } else {
+                resultBox.innerText = data.whisper_result;
+            }
+            uiManager.updateComparisonButtons();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultBox.innerText = 'An error occurred while refreshing the transcript.';
+        })
+        .finally(() => {
+            this.disabled = false;
+        });
     }
 
     return {

@@ -3,39 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}YouTube Transcriber{% endblock %}</title>
+    <title>{% block title %}Our Tools{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    {% block extra_head %}{% endblock %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
-        <!-- Side Panel -->
         <div id="side-panel" class="w-64 bg-white shadow-lg p-4 flex flex-col">
             <div class="flex-grow">
-                <h2 class="text-lg font-semibold mb-2">History</h2>
-                <ul id="history-list" class="space-y-2">
-                    <!-- History items will be added here dynamically -->
+                <h2 id="history" class="text-lg font-semibold mb-2">Tools</h2>
+                <ul class="space-y-2">
+                    <li><a href="{{ url_for('web.index_page') }}" class="text-blue-600 hover:text-blue-800">Home</a></li>
+                    <li><a href="{{ url_for('web.transcription_page') }}" class="text-blue-600 hover:text-blue-800">Video Transcription</a></li>
+                    <li><a href="{{ url_for('web.website_to_pdf_page') }}" class="text-blue-600 hover:text-blue-800">Website to PDF</a></li>
                 </ul>
             </div>
             <div>
-                <h2 class="text-lg font-semibold mb-2">Settings</h2>
+                <h2 id="settings" class="text-lg font-semibold mb-2">Settings</h2>
                 <div class="space-y-2">
-                    <!-- Add any settings here if needed -->
+                    <!-- Add settings options here if needed -->
                 </div>
             </div>
         </div>
-
-        <!-- Main Content -->
         <div class="flex-1 p-8 overflow-y-auto">
-            {% block content %}
-            <!-- Content will be inserted here -->
-            {% endblock %}
+            {% block content %}{% endblock %}
         </div>
     </div>
-
-    {% block scripts %}
-    <script type="module" src="/static/js/main.js"></script>
-    {% endblock %}
+    {% block scripts %}{% endblock %}
 </body>
 </html>

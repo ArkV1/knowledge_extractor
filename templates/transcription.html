@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 
+{% block title %}YouTube Transcriber{% endblock %}
+
 {% block content %}
 <div id="main-container"
-    class="bg-white shadow-md rounded-lg p-8 w-full mx-auto transition-all duration-500 ease-in-out">
+    class="bg-white shadow-md rounded-lg p-8 w-full mx-auto transition-all duration-500 ease-in-out"
+    style="max-width: 672px;"> <!-- Set initial fixed width -->
+
     <h1 class="text-2xl font-bold mb-6 text-center">YouTube Transcriber</h1>
 
-    <div class="max-w-2xl mx-auto"> <!-- New wrapper div -->
+    <div class="max-w-2xl mx-auto">
         <div class="mb-4">
             <div id="progress-bar-container" class="hidden w-full bg-gray-200 rounded-full h-2.5 mb-2">
                 <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-in-out"
@@ -28,28 +32,28 @@
                 <label class="block text-sm font-medium text-gray-700">Select Transcription Method:</label>
                 <div class="mt-2 space-y-2">
                     <div>
-                        <input type="radio" id="youtube" name="method" value="YouTube" {% if method=='YouTube'
-                            %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                        <input type="radio" id="youtube" name="method" value="YouTube" checked
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                         <label for="youtube" class="ml-3 text-sm font-medium text-gray-700">YouTube's Own
                             Transcription</label>
                     </div>
                     <div>
-                        <input type="radio" id="whisper" name="method" value="Whisper" {% if method=='Whisper'
-                            %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                        <input type="radio" id="whisper" name="method" value="Whisper"
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                         <label for="whisper" class="ml-3 text-sm font-medium text-gray-700">OpenAI Whisper
                             Transcription</label>
                     </div>
                     <div>
-                        <input type="radio" id="both" name="method" value="Both" {% if method=='Both' %}checked{% endif
-                            %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                        <input type="radio" id="both" name="method" value="Both"
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
                         <label for="both" class="ml-3 text-sm font-medium text-gray-700">Compare Both
                             Transcriptions</label>
                     </div>
                 </div>
             </div>
 
-            <div id="whisper-model-container"
-                class="mt-4 hidden overflow-hidden transition-all duration-300 ease-in-out">
+            <!-- Whisper model dropdown (hidden initially) -->
+            <div id="whisper-model-container" class="mt-4 hidden overflow-hidden transition-all duration-300 ease-in-out">
                 <label for="whisper-model" class="block text-sm font-medium text-gray-700">Select Whisper Model:</label>
                 <select id="whisper-model" name="whisper-model"
                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
@@ -61,72 +65,66 @@
                 </select>
             </div>
 
-            <div class="flex justify-center">
-                <input type="submit" value="Submit"
-                    class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <div class="flex justify-center mt-4">
+                <button type="submit"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+                    Submit
+                </button>
             </div>
         </form>
     </div>
 
-    <div id="results-section" class="mt-8">
-        <div class="max-w-2xl mx-auto mb-4"> <!-- Wrapper for buttons -->
+    <!-- Results Section (hidden initially) -->
+    <div id="results-section" class="mt-8 hidden">
+        <div class="max-w-2xl mx-auto mb-4">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-700">Transcription Results:</h3>
+                <h2 class="text-lg font-semibold text-gray-700">Transcription Results:</h2>
                 <div class="space-x-2">
                     <button id="inline-compare-button"
-                        class="hidden py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        class="px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 hidden">
                         Inline Compare
                     </button>
                     <button id="side-by-side-compare-button"
-                        class="hidden py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        class="px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 hidden">
                         Side-by-Side Compare
                     </button>
                 </div>
             </div>
-        </div>
-        <div id="results-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div id="youtube-result-box" class="bg-gray-50 p-4 border border-gray-200 rounded-lg">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="font-bold text-gray-800">YouTube Transcript:</h4>
-                    <button class="refresh-button hidden p-1 text-indigo-600 hover:text-indigo-800 focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </div>
-                <pre id="youtube-result" class="min-h-[100px] whitespace-pre-wrap"></pre>
-            </div>
 
-            <div id="whisper-result-box" class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="font-bold text-gray-800">Whisper Transcript:</h4>
-                    <button class="refresh-button hidden p-1 text-indigo-600 hover:text-indigo-800 focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
+            <div id="results-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="youtube-result-box" class="bg-gray-50 p-4 border border-gray-200 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-bold text-gray-800">YouTube Transcript:</h4>
+                    </div>
+                    <pre id="youtube-result" class="min-h-[100px] whitespace-pre-wrap"></pre>
                 </div>
-                <pre id="whisper-result" class="min-h-[100px] whitespace-pre-wrap"></pre>
-            </div>
 
-            <div id="comparison-result-box"
-                class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden overflow-auto max-h-screen col-span-full">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="font-bold text-gray-800">Comparison:</h4>
-                    <button id="compare-back-button"
-                        class="p-1 text-indigo-600 hover:text-indigo-800 focus:outline-none">
-                        Back to Transcripts
-                    </button>
+                <div id="whisper-result-box" class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-bold text-gray-800">Whisper Transcript:</h4>
+                    </div>
+                    <pre id="whisper-result" class="min-h-[100px] whitespace-pre-wrap"></pre>
                 </div>
-                <div id="comparison-result">
-                    <!-- Comparison content will be inserted here dynamically -->
+
+                <div id="comparison-result-box"
+                    class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden overflow-auto max-h-screen col-span-full">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-bold text-gray-800">Comparison:</h4>
+                        <button id="compare-back-button"
+                            class="p-1 text-indigo-600 hover:text-indigo-800 focus:outline-none">
+                            Back to Transcripts
+                        </button>
+                    </div>
+                    <div id="comparison-result">
+                        <!-- Comparison content will be inserted here dynamically -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}" type="module"></script>
 {% endblock %}

@@ -1,7 +1,7 @@
 from flask import Flask
-from api.routes import api_bp  # Import your API blueprint
-from web.routes import web_bp  # Import your Web blueprint
-from web.socketio import socketio  # Import socketio from the new file
+from api.routes import api_bp
+from web.routes import web_bp
+from web.socketio import socketio
 import webview
 from threading import Thread
 import time
@@ -47,20 +47,20 @@ def stop_flask():
     os.kill(os.getpid(), signal.SIGINT)
 
 if __name__ == "__main__":
-    # Development mode
-    if os.getenv('FLASK_ENV') == 'development':
-        print("Running in development mode")
-        port = int(os.getenv('PORT', 5000))
+    # Get environment from .env file
+    flask_env = os.getenv('FLASK_ENV', 'development')
+    port = int(os.getenv('PORT', 5000))
+    
+    if flask_env == 'development':
+        print(f"Running in {flask_env} mode on port {port}")
         socketio.run(app, debug=True, use_reloader=True, port=port)
 
-    # Production mode
     else:
-        print("Running in production mode")
+        print(f"Running in {flask_env} mode on port {port}")
         thread = Thread(target=run_flask)
         thread.daemon = True
         thread.start()
 
-        port = int(os.getenv('PORT', 5000))
         wait_for_server(f"http://127.0.0.1:{port}")
 
         try:

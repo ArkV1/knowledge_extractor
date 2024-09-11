@@ -5,8 +5,6 @@ export function initUIManager(elements) {
         elements.comparisonResultBox.classList.add('hidden');
         elements.inlineCompareButton.classList.add('hidden');
         elements.sideBySideCompareButton.classList.add('hidden');
-        hideResultsSection();
-        document.querySelectorAll('.refresh-button').forEach(button => button.classList.add('hidden'));
     }
 
     function showProgress(message) {
@@ -14,8 +12,6 @@ export function initUIManager(elements) {
         elements.progressBarContainer.classList.remove('hidden');
         elements.progressText.innerText = message;
         elements.progressBar.style.width = '0%';
-        elements.downloadSpeed.classList.add('hidden');
-        elements.eta.classList.add('hidden');
     }
 
     function hideProgress() {
@@ -28,16 +24,28 @@ export function initUIManager(elements) {
     function updateUI() {
         const selectedMethod = document.querySelector('input[name="method"]:checked').value;
 
+        // Toggle Whisper model container based on selected method
         toggleWhisperModelContainer(selectedMethod);
+
+        // Update the result boxes visibility based on the selected method
         updateResultBoxesVisibility(selectedMethod);
 
         if (elements.youtubeResult.innerText || elements.whisperResult.innerText) {
             showResultsSection();
-        } else {
-            hideResultsSection();
         }
 
         updateComparisonButtons();
+    }
+
+    function toggleWhisperModelContainer(selectedMethod) {
+        const container = elements.whisperModelContainer;
+        const show = selectedMethod === 'Whisper' || selectedMethod === 'Both';
+
+        if (show) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
     }
 
     function updateResultBoxesVisibility(selectedMethod) {
@@ -56,33 +64,12 @@ export function initUIManager(elements) {
 
     function showResultsSection() {
         elements.resultsSection.classList.remove('hidden');
-        elements.resultsSection.style.maxHeight = elements.resultsSection.scrollHeight + 'px';
-        elements.resultsSection.style.opacity = '1';
-        elements.mainContainer.style.maxWidth = '90%'; // Adjust to 90% of the viewport width
-        elements.mainContainer.style.width = '1200px'; // Set a maximum width
+        elements.mainContainer.style.maxWidth = '1200px';  // Expand container width when results are shown
     }
 
     function hideResultsSection() {
         elements.resultsSection.classList.add('hidden');
-        elements.resultsSection.style.maxHeight = '0px';
-        elements.resultsSection.style.opacity = '0';
-        elements.mainContainer.style.maxWidth = '100%';
-        elements.mainContainer.style.width = '672px'; // 2xl in Tailwind (same as max-w-2xl)
-    }
-
-    function toggleWhisperModelContainer(selectedMethod) {
-        const container = elements.whisperModelContainer;
-        const show = selectedMethod === 'Whisper' || selectedMethod === 'Both';
-
-        if (show) {
-            container.classList.remove('hidden');
-            container.style.maxHeight = container.scrollHeight + 'px';
-            container.style.opacity = '1';
-        } else {
-            container.classList.add('hidden');
-            container.style.maxHeight = '0px';
-            container.style.opacity = '0';
-        }
+        elements.mainContainer.style.maxWidth = '672px';  // Reset to initial width
     }
 
     function showComparisonResult() {
@@ -91,44 +78,32 @@ export function initUIManager(elements) {
         elements.comparisonResultBox.classList.remove('hidden');
         elements.inlineCompareButton.classList.add('hidden');
         elements.sideBySideCompareButton.classList.add('hidden');
-        elements.mainContainer.style.maxWidth = '90%'; // Adjust to 90% of the viewport width
-        elements.mainContainer.style.width = '1200px'; // Set a maximum width
     }
 
     function hideComparisonResult() {
         elements.comparisonResultBox.classList.add('hidden');
         updateResultBoxesVisibility(document.querySelector('input[name="method"]:checked').value);
         updateComparisonButtons();
-        elements.mainContainer.style.maxWidth = '100%';
-        elements.mainContainer.style.width = '672px'; // 2xl in Tailwind (same as max-w-2xl)
-    }
-
-    function initUI() {
-        const selectedMethod = document.querySelector('input[name="method"]:checked').value;
-        toggleWhisperModelContainer(selectedMethod);
-        updateResultBoxesVisibility(selectedMethod);
     }
 
     function bindEvents(transcriptionManager, comparisonManager) {
         elements.transcriptionForm.addEventListener('submit', transcriptionManager.handleFormSubmit);
+
+        // Bind the radio buttons to update UI when selected
         elements.methodRadios.forEach(radio => radio.addEventListener('change', updateUI));
+
         elements.inlineCompareButton.addEventListener('click', () => {
-            comparisonManager.resetComparisonState();
             comparisonManager.compareTranscripts('inline');
         });
+
         elements.sideBySideCompareButton.addEventListener('click', () => {
-            comparisonManager.resetComparisonState();
             comparisonManager.compareTranscripts('side_by_side');
         });
+
         elements.compareBackButton.addEventListener('click', comparisonManager.handleCompareBack);
-        document.querySelectorAll('.refresh-button').forEach(button => {
-            button.addEventListener('click', transcriptionManager.handleRefresh);
-        });
     }
 
-    // Call these functions when the page loads
-    hideResultsSection();
-    initUI();
+    hideResultsSection();  // Initialize with the results section hidden
 
     return {
         resetUI,
