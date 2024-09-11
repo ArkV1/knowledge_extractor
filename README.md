@@ -1,5 +1,9 @@
 # YouTube Video Transcription Tool
 
+<p align="center">
+  <img src="images/preview.png" alt="Preview of YouTube Video Transcription Tool" width="800">
+</p>
+
 This Python project automates the process of downloading YouTube videos, extracting audio, and transcribing them using OpenAI's Whisper model or YouTube's auto-generated transcripts. The project works both as a **desktop application** (via PyWebView) and as a **web application** (via Flask).
 
 ## Features

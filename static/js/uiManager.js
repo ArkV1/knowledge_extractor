@@ -58,14 +58,16 @@ export function initUIManager(elements) {
         elements.resultsSection.classList.remove('hidden');
         elements.resultsSection.style.maxHeight = elements.resultsSection.scrollHeight + 'px';
         elements.resultsSection.style.opacity = '1';
-        elements.mainContainer.style.maxWidth = '800px';
+        elements.mainContainer.style.maxWidth = '90%'; // Adjust to 90% of the viewport width
+        elements.mainContainer.style.width = '1200px'; // Set a maximum width
     }
 
     function hideResultsSection() {
         elements.resultsSection.classList.add('hidden');
         elements.resultsSection.style.maxHeight = '0px';
         elements.resultsSection.style.opacity = '0';
-        elements.mainContainer.style.maxWidth = '32rem';
+        elements.mainContainer.style.maxWidth = '100%';
+        elements.mainContainer.style.width = '672px'; // 2xl in Tailwind (same as max-w-2xl)
     }
 
     function toggleWhisperModelContainer(selectedMethod) {
@@ -89,14 +91,16 @@ export function initUIManager(elements) {
         elements.comparisonResultBox.classList.remove('hidden');
         elements.inlineCompareButton.classList.add('hidden');
         elements.sideBySideCompareButton.classList.add('hidden');
-        elements.mainContainer.style.maxWidth = '100%'; // Ensure full width
+        elements.mainContainer.style.maxWidth = '90%'; // Adjust to 90% of the viewport width
+        elements.mainContainer.style.width = '1200px'; // Set a maximum width
     }
 
     function hideComparisonResult() {
         elements.comparisonResultBox.classList.add('hidden');
         updateResultBoxesVisibility(document.querySelector('input[name="method"]:checked').value);
         updateComparisonButtons();
-        elements.mainContainer.style.maxWidth = '800px'; // Reset to original max-width
+        elements.mainContainer.style.maxWidth = '100%';
+        elements.mainContainer.style.width = '672px'; // 2xl in Tailwind (same as max-w-2xl)
     }
 
     function initUI() {
