@@ -3,12 +3,11 @@ from api.routes import api_bp
 from web.routes import web_bp
 from web.socketio import socketio
 import webview
-from threading import Thread
+from threading import Thread, Event
 import time
 import requests
 import os
 from dotenv import load_dotenv
-import signal
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,6 +20,9 @@ app.register_blueprint(web_bp)
 
 # Attach Flask app to socketio instance
 socketio.init_app(app)
+
+# Create an event to signal the server to shut down
+shutdown_event = Event()
 
 def wait_for_server(url, timeout=30):
     start_time = time.time()
@@ -43,8 +45,7 @@ def run_flask():
     socketio.run(app, port=port)
 
 def stop_flask():
-    """Gracefully stop the Flask server."""
-    os.kill(os.getpid(), signal.SIGINT)
+    shutdown_event.set()
 
 if __name__ == "__main__":
     # Get environment from .env file
@@ -54,18 +55,19 @@ if __name__ == "__main__":
     if flask_env == 'development':
         print(f"Running in {flask_env} mode on port {port}")
         socketio.run(app, debug=True, use_reloader=True, port=port)
-
     else:
         print(f"Running in {flask_env} mode on port {port}")
-        thread = Thread(target=run_flask)
-        thread.daemon = True
-        thread.start()
+        server_thread = Thread(target=run_flask)
+        server_thread.daemon = True
+        server_thread.start()
 
         wait_for_server(f"http://127.0.0.1:{port}")
 
         try:
             webview.create_window("YouTube Transcriber", f"http://127.0.0.1:{port}")
-            # Start the webview and attach stop_flask to close event
-            webview.start(stop_flask)
+            webview.start(func=stop_flask)
         except Exception as e:
             print(f"Error creating webview window: {e}")
+        finally:
+            shutdown_event.set()
+            server_thread.join(timeout=5)

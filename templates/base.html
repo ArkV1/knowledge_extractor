@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,21 +8,26 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
+
 <body class="bg-gray-100">
     <div class="flex h-screen">
         <div id="side-panel" class="w-64 bg-white shadow-lg p-4 flex flex-col">
             <div class="flex-grow">
                 <h2 id="history" class="text-lg font-semibold mb-2">Tools</h2>
                 <ul class="space-y-2">
-                    <li><a href="{{ url_for('web.index_page') }}" class="text-blue-600 hover:text-blue-800">Home</a></li>
-                    <li><a href="{{ url_for('web.transcription_page') }}" class="text-blue-600 hover:text-blue-800">Video Transcription</a></li>
-                    <li><a href="{{ url_for('web.website_to_pdf_page') }}" class="text-blue-600 hover:text-blue-800">Website to PDF</a></li>
+                    <li><a href="{{ url_for('web.index_page') }}" class="text-blue-600 hover:text-blue-800">Home</a>
+                    </li>
+                    <li><a href="{{ url_for('web.transcription_page') }}"
+                            class="text-blue-600 hover:text-blue-800">Video Transcription</a></li>
+                    <li><a href="{{ url_for('web.website_to_pdf_page') }}"
+                            class="text-blue-600 hover:text-blue-800">Website to PDF</a></li>
                 </ul>
             </div>
             <div>
                 <h2 id="settings" class="text-lg font-semibold mb-2">Settings</h2>
                 <div class="space-y-2">
-                    <!-- Add settings options here if needed -->
+                    <button id="update-extensions" class="text-blue-600 hover:text-blue-800">Update Extensions</button>
+                    <p id="extension-version" class="text-sm text-gray-600">Extension version: Loading...</p>
                 </div>
             </div>
         </div>
@@ -30,5 +36,8 @@
         </div>
     </div>
     {% block scripts %}{% endblock %}
+    <script src="{{ url_for('static', filename='js/main.js') }}" type="module"></script>
+    <script src="{{ url_for('static', filename='js/extensionManager.js') }}" type="module"></script>
 </body>
+
 </html>

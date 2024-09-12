@@ -1,13 +1,14 @@
+
+import os
 from flask import Blueprint, request, jsonify, send_file
 from werkzeug.utils import secure_filename
-import os
-import asyncio
+from web.socketio import socketio
 from features.transcription import (
     get_youtube_transcript, transcribe_with_whisper, 
     download_audio, extract_video_id, highlight_differences
 )
-from features.pdf_converter import convert_url_to_pdf
-from web.socketio import socketio
+from features.pdf_converter import get_extension_version, start_conversion
+import asyncio
 
 api_bp = Blueprint('api', __name__)
 
@@ -90,17 +91,27 @@ def convert_to_pdf():
         return jsonify({"error": "URL is required"}), 400
 
     try:
-        # Call the new Pyppeteer-based PDF conversion function
-        filename = convert_url_to_pdf(url)
-        return jsonify({'filename': filename}), 200
+        filename = start_conversion(url)
+        pdf_path = os.path.join('downloads', filename)
+        if not os.path.exists(pdf_path):
+            return jsonify({"error": "PDF generation failed"}), 500
+        return jsonify({"filename": filename}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # Download PDF file
 @api_bp.route("/download/<filename>", methods=["GET"])
-def download_file(filename):
-    downloads_dir = os.path.join(os.getcwd(), 'downloads')
-    try:
-        return send_file(os.path.join(downloads_dir, filename), as_attachment=True)
-    except FileNotFoundError:
+def download_pdf(filename):
+    pdf_path = os.path.join('downloads', filename)
+    if not os.path.exists(pdf_path):
         return jsonify({"error": "File not found"}), 404
+    return send_file(pdf_path, as_attachment=False, mimetype='application/pdf', download_name=filename)
+
+# Get Extension Version
+@api_bp.route("/api/extension-version", methods=["GET"])
+def get_extension_version_api():
+    try:
+        version = get_extension_version()
+        return jsonify({"version": version})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

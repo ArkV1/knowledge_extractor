@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, jsonify
+from features.pdf_converter import update_extension
+from logger import app_logger
 
 web_bp = Blueprint('web', __name__)
 
@@ -14,3 +16,13 @@ def transcription_page():
 @web_bp.route("/website-to-pdf", methods=["GET"])
 def website_to_pdf_page():
     return render_template('website_to_pdf.html')
+
+@web_bp.route("/update-extensions", methods=["POST"])
+def update_extensions():
+    try:
+        new_version = update_extension()
+        app_logger.info(f"Extension updated successfully to version {new_version}")
+        return jsonify({"success": True, "version": new_version})
+    except Exception as e:
+        app_logger.error(f"Error in update_extensions route: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
