@@ -5,19 +5,20 @@
 {% block content %}
 <div id="main-container"
     class="bg-white shadow-md rounded-lg p-8 w-full mx-auto transition-all duration-500 ease-in-out"
-    style="max-width: 672px;"> <!-- Set initial fixed width -->
+    style="max-width: 672px;">
 
     <h1 class="text-2xl font-bold mb-6 text-center">YouTube Transcriber</h1>
 
     <div class="max-w-2xl mx-auto">
         <div class="mb-4">
-            <div id="progress-bar-container" class="hidden w-full bg-gray-200 rounded-full h-2.5 mb-2">
+            <div id="progress-bar-container" data-ui-state="progressBarVisible"
+                class="hidden w-full bg-gray-200 rounded-full h-2.5 mb-2">
                 <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-in-out"
                     style="width: 0%"></div>
             </div>
-            <p id="progress" class="text-gray-700 hidden">Waiting for input...</p>
-            <p id="download-speed" class="text-gray-700 hidden"></p>
-            <p id="eta" class="text-gray-700 hidden"></p>
+            <p id="progress" data-ui-state="progressBarVisible" class="text-gray-700 hidden">Waiting for input...</p>
+            <p id="download-speed" data-ui-state="progressBarVisible" class="text-gray-700 hidden"></p>
+            <p id="eta" data-ui-state="progressBarVisible" class="text-gray-700 hidden"></p>
         </div>
 
         <form id="transcription-form" class="space-y-4">
@@ -52,8 +53,8 @@
                 </div>
             </div>
 
-            <!-- Whisper model dropdown (hidden initially) -->
-            <div id="whisper-model-container" class="mt-4 hidden overflow-hidden transition-all duration-300 ease-in-out">
+            <div id="whisper-model-container"
+                class="mt-4 hidden overflow-hidden transition-all duration-300 ease-in-out">
                 <label for="whisper-model" class="block text-sm font-medium text-gray-700">Select Whisper Model:</label>
                 <select id="whisper-model" name="whisper-model"
                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
@@ -67,57 +68,71 @@
 
             <div class="flex justify-center mt-4">
                 <button type="submit"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+                    class="btn px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     Submit
                 </button>
             </div>
         </form>
     </div>
 
-    <!-- Results Section (hidden initially) -->
-    <div id="results-section" class="mt-8 hidden">
-        <div class="max-w-2xl mx-auto mb-4">
+    <div id="results-section" class="mt-8 hidden w-full">
+        <div class="w-full mb-4">
             <div class="flex justify-between items-center">
-                <h2 class="text-lg font-semibold text-gray-700">Transcription Results:</h2>
+                <h2 id="results-title" class="text-lg font-semibold text-gray-700">Transcription Results:</h2>
                 <div class="space-x-2">
                     <button id="inline-compare-button"
-                        class="px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 hidden">
+                        class="btn hidden px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         Inline Compare
                     </button>
                     <button id="side-by-side-compare-button"
-                        class="px-3 py-1 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 hidden">
+                        class="btn hidden px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
                         Side-by-Side Compare
                     </button>
                 </div>
             </div>
 
-            <div id="results-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div id="youtube-result-box" class="bg-gray-50 p-4 border border-gray-200 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
+            <div id="results-container" class="flex flex-col mt-4 space-y-4">
+                <div id="youtube-result-box"
+                    class="bg-gray-50 p-4 border border-gray-200 rounded-lg w-full min-h-[200px]">
+                    <div class="flex justify-between items-center mb-2 h-8">
                         <h4 class="font-bold text-gray-800">YouTube Transcript:</h4>
+                        <div class="flex items-center space-x-2">
+                            <button
+                                class="refresh-button px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hidden">Refresh</button>
+                        </div>
                     </div>
-                    <pre id="youtube-result" class="min-h-[100px] whitespace-pre-wrap"></pre>
+                    <pre id="youtube-result" class="whitespace-pre-wrap w-full"></pre>
                 </div>
 
-                <div id="whisper-result-box" class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden">
-                    <div class="flex justify-between items-center mb-2">
+                <div id="whisper-result-box"
+                    class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden w-full min-h-[200px]">
+                    <div class="flex justify-between items-center mb-2 h-8">
                         <h4 class="font-bold text-gray-800">Whisper Transcript:</h4>
+                        <div class="flex items-center space-x-2">
+                            <button
+                                class="refresh-button px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hidden">Refresh</button>
+                            <button id="compare-back-button-side-by-side"
+                                class="btn px-2 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-300 hidden">
+                                Back to Transcripts
+                            </button>
+                        </div>
                     </div>
-                    <pre id="whisper-result" class="min-h-[100px] whitespace-pre-wrap"></pre>
+                    <pre id="whisper-result" class="whitespace-pre-wrap w-full"></pre>
                 </div>
 
+                <!-- Add this block for comparison results -->
                 <div id="comparison-result-box"
-                    class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden overflow-auto max-h-screen col-span-full">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-gray-800">Comparison:</h4>
-                        <button id="compare-back-button"
-                            class="p-1 text-indigo-600 hover:text-indigo-800 focus:outline-none">
-                            Back to Transcripts
-                        </button>
+                    class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden w-full min-h-[200px]">
+                    <div class="flex justify-between items-center mb-2 h-8">
+                        <h4 class="font-bold text-gray-800">Comparison Result:</h4>
+                        <div class="flex items-center space-x-2">
+                            <button id="compare-back-button"
+                                class="btn px-2 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-300">
+                                Back to Transcripts
+                            </button>
+                        </div>
                     </div>
-                    <div id="comparison-result">
-                        <!-- Comparison content will be inserted here dynamically -->
-                    </div>
+                    <pre id="comparison-result" class="whitespace-pre-wrap w-full"></pre>
                 </div>
             </div>
         </div>

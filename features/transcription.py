@@ -66,7 +66,6 @@ def download_audio(video_url, output_dir="downloads", socketio=None):
             socketio.emit('progress', {'status': f'Error during download: {str(e)}'})
         raise
 
-
 # Transcribe audio using Whisper
 def transcribe_with_whisper(audio_file, model_name='base'):
     model = whisper.load_model(model_name)

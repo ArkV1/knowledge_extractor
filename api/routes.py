@@ -24,25 +24,34 @@ def transcribe():
         return jsonify({'error': 'Invalid YouTube URL'}), 400
 
     youtube_result, whisper_result = None, None
+    audio_file = None
     socketio.emit('progress', {'status': 'Starting transcription...'})
 
-    # Fetch YouTube transcription
-    if method == "YouTube" or method == "Both":
-        socketio.emit('progress', {'status': 'Fetching YouTube transcription...'})
-        youtube_result = get_youtube_transcript(video_id)
-        socketio.emit('progress', {'status': 'YouTube transcription complete.'})
+    try:
+        # Fetch YouTube transcription
+        if method == "YouTube" or method == "Both":
+            socketio.emit('progress', {'status': 'Fetching YouTube transcription...'})
+            youtube_result = get_youtube_transcript(video_id)
+            socketio.emit('progress', {'status': 'YouTube transcription complete.'})
 
-    # Fetch Whisper transcription
-    if method == "Whisper" or method == "Both":
-        socketio.emit('progress', {'status': 'Starting audio download...'})
-        audio_file = download_audio(url, socketio=socketio)
-        socketio.emit('progress', {'status': f'Transcribing with Whisper ({whisper_model} model)...'})
-        whisper_result = transcribe_with_whisper(audio_file, whisper_model)
-        os.remove(audio_file)
-        socketio.emit('progress', {'status': 'Whisper transcription complete.'})
+        # Fetch Whisper transcription
+        if method == "Whisper" or method == "Both":
+            socketio.emit('progress', {'status': 'Starting audio download...'})
+            audio_file = download_audio(url, socketio=socketio)
+            socketio.emit('progress', {'status': f'Transcribing with Whisper ({whisper_model} model)...'})
+            whisper_result = transcribe_with_whisper(audio_file, whisper_model)
+            socketio.emit('progress', {'status': 'Whisper transcription complete.'})
 
-    socketio.emit('progress', {'status': 'Transcription complete.'})
-    return jsonify({'youtube_result': youtube_result, 'whisper_result': whisper_result})
+        socketio.emit('progress', {'status': 'Transcription complete.'})
+        return jsonify({'youtube_result': youtube_result, 'whisper_result': whisper_result})
+
+    except Exception as e:
+        socketio.emit('progress', {'status': f'Error during transcription: {str(e)}'})
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        if audio_file and os.path.exists(audio_file):
+            os.remove(audio_file)
 
 # Compare Route
 @api_bp.route("/api/compare", methods=['POST'])
