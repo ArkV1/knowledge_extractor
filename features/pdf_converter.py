@@ -12,7 +12,7 @@ import requests
 from logger import extension_logger
 
 # Function to create a PDF using Pyppeteer
-async def create_pdf(url, pdf_path, orientation='portrait'):
+async def create_pdf(url, pdf_path, orientation='portrait', zoom=1):
     browser = None
     try:
         extension_path = os.path.join(os.getcwd(), 'extensions', 'i-still-dont-care-about-cookies')
@@ -30,56 +30,73 @@ async def create_pdf(url, pdf_path, orientation='portrait'):
                 '--no-zygote',
             ],
             ignoreDefaultArgs=['--enable-automation'],
-            timeout=60000
+            timeout=12000
         )
 
         page = await browser.newPage()
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
 
-        # Set viewport size based on orientation
+        # Set viewport size based on orientation and zoom factor
         if orientation == 'landscape':
-            await page.setViewport({'width': 1920, 'height': 1080})
-        else:
-            await page.setViewport({'width': 1080, 'height': 1920})
+            viewport_width = int(1920 * zoom)
+            viewport_height = int(1080 * zoom)
+        elif orientation == 'portrait':
+            viewport_width = int(1080 * zoom)
+            viewport_height = int(1920 * zoom)
+        else:  # auto
+            viewport_width = int(1080 * zoom)
+            viewport_height = int(1920 * zoom)
 
-        await page.goto(url, {'waitUntil': 'networkidle0', 'timeout': 60000})
+        extension_logger.debug(f"Setting viewport to width: {viewport_width}, height: {viewport_height}, zoom: {zoom}")
+        await page.setViewport({'width': viewport_width, 'height': viewport_height})
+        await page.goto(url, {'waitUntil': 'networkidle0', 'timeout': 12000})
         await page.waitFor(5000)
 
         # Set page size and orientation
-        page_width = '297mm' if orientation == 'landscape' else '210mm'
-        page_height = '210mm' if orientation == 'landscape' else '297mm'
+        if orientation == 'landscape':
+            page_width = '297mm'
+            page_height = '210mm'
+            prefer_css_page_size = False
+        elif orientation == 'portrait':
+            page_width = '210mm'
+            page_height = '297mm'
+            prefer_css_page_size = False
+        else:  # auto
+            page_width = None
+            page_height = None
+            prefer_css_page_size = True
+
+        extension_logger.debug(f"Setting page size to width: {page_width}, height: {page_height}, orientation: {orientation}")
 
         # Add CSS for page orientation and to show all content
         await page.evaluate(f'''() => {{
             const style = document.createElement('style');
             style.textContent = `
                 @page {{
-                    size: {page_width} {page_height};
+                    size: {page_width if page_width else 'auto'} {page_height if page_height else 'auto'};
                     margin: 0;
                 }}
                 body {{
-                    width: {page_width};
-                    height: {page_height};
+                    width: {page_width if page_width else 'auto'};
+                    height: {page_height if page_height else 'auto'};
                     margin: 0;
-                    -webkit-print-color-adjust: exact;
-                }}
-                * {{
-                    -webkit-print-color-adjust: exact;
                 }}
             `;
             document.head.appendChild(style);
         }}''')
 
-        await page.pdf({
+        pdf_options = {
             'path': pdf_path,
-            'width': page_width,
-            'height': page_height,
             'printBackground': True,
-            'preferCSSPageSize': True,
-        })
+            'preferCSSPageSize': prefer_css_page_size,
+        }
+        if page_width and page_height:
+            pdf_options['width'] = page_width
+            pdf_options['height'] = page_height
 
-        extension_logger.info(f"PDF created successfully: {pdf_path} with orientation: {orientation}")
+        await page.pdf(pdf_options)
 
+        extension_logger.info(f"PDF created successfully: {pdf_path} with orientation: {orientation} and zoom: {zoom}")
     except BrowserError as e:
         extension_logger.error(f"Browser error: {str(e)}")
     except TimeoutError:
@@ -110,7 +127,7 @@ def get_pdf_directory():
     return pdf_dir
 
 # Function to handle URL to PDF conversion in a separate process
-def convert_url_to_pdf(url, orientation, queue):
+def convert_url_to_pdf(url, orientation, zoom, queue):
     pdf_dir = get_pdf_directory()
     filename = generate_pdf_filename(url)
     pdf_path = os.path.join(pdf_dir, filename)
@@ -119,15 +136,15 @@ def convert_url_to_pdf(url, orientation, queue):
     try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(create_pdf(url, pdf_path, orientation))
+        loop.run_until_complete(create_pdf(url, pdf_path, orientation, zoom))
         queue.put(filename)
     except Exception as e:
         queue.put(e)
 
 # Function to start the conversion process
-def start_conversion(url, orientation='portrait'):
+def start_conversion(url, orientation='portrait', zoom=1):
     queue = Queue()
-    process = Process(target=convert_url_to_pdf, args=(url, orientation, queue))
+    process = Process(target=convert_url_to_pdf, args=(url, orientation, zoom, queue))
     process.start()
     process.join()
     result = queue.get()

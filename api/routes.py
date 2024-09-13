@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, current_app as app
 from werkzeug.utils import secure_filename
 from web.socketio import socketio
 from features.transcription import (
@@ -8,6 +8,9 @@ from features.transcription import (
 )
 from features.pdf_converter import get_extension_version, start_conversion
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+executor = ThreadPoolExecutor(max_workers=2)
 
 api_bp = Blueprint('api', __name__)
 
@@ -81,23 +84,29 @@ def compare():
         return jsonify({'error': f'Error during comparison: {str(e)}'}), 500
 
 # Convert URL to PDF (Updated to use Pyppeteer)
+def convert(app, url, orientation, zoom):
+    with app.app_context():
+        try:
+            filename = start_conversion(url, orientation, zoom)
+            pdf_path = os.path.join('downloads', filename)
+            if not os.path.exists(pdf_path):
+                return jsonify({"error": "PDF generation failed"}), 500
+            return jsonify({"filename": filename}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
 @api_bp.route("/api/convert-to-pdf", methods=["POST"])
 def convert_to_pdf():
     data = request.json
     url = data.get('url')
     orientation = data.get('orientation', 'portrait')
+    zoom = float(data.get('zoom', 100)) / 100
 
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
-    try:
-        filename = start_conversion(url, orientation)
-        pdf_path = os.path.join('downloads', filename)
-        if not os.path.exists(pdf_path):
-            return jsonify({"error": "PDF generation failed"}), 500
-        return jsonify({"filename": filename}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    future = executor.submit(convert, app._get_current_object(), url, orientation, zoom)
+    return future.result()
 
 # Download PDF file
 @api_bp.route("/download/<filename>", methods=["GET"])

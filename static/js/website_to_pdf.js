@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         const url = document.getElementById('url').value;
         const orientation = document.getElementById('orientation').value;
+        const zoom = document.getElementById('zoom').value;
 
         progressContainer.classList.remove('hidden');
         resultContainer.classList.add('hidden');
@@ -31,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ url: url, orientation: orientation }),
+            body: JSON.stringify({ url: url, orientation: orientation, zoom: zoom }),
         })
             .then(response => response.json())
             .then(data => {

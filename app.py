@@ -1,12 +1,10 @@
-from flask import Flask
-from api.routes import api_bp
-from web.routes import web_bp
-from web.socketio import socketio
-import webview
-from threading import Thread, Event
+import os
 import time
 import requests
-import os
+from asyncio import Event
+from flask import Flask
+from web.routes import web_bp
+from web.socketio import socketio
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -14,9 +12,13 @@ load_dotenv()
 
 app = Flask(__name__)
 
+def register_blueprints(app):
+    from api.routes import api_bp
+    app.register_blueprint(api_bp)
+    app.register_blueprint(web_bp)
+
 # Register blueprints
-app.register_blueprint(api_bp)
-app.register_blueprint(web_bp)
+register_blueprints(app)
 
 # Attach Flask app to socketio instance
 socketio.init_app(app)
