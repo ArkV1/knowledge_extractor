@@ -15,6 +15,10 @@ This Python project automates the process of downloading YouTube videos, extract
 - Run the app as both a desktop application (via PyWebView) and a web app (via Flask).
 - Real-time progress updates using WebSockets.
 - Responsive design for various screen sizes.
+- Convert websites to PDFs with options for orientation and zoom using pyppeteer.
+- Uses pyppeteer with browser extensions to hide cookie popups during PDF conversion.
+- Browser extensions updating and version monitoring.
+
 
 ## Prerequisites
 
@@ -110,6 +114,8 @@ The project relies on the following Python libraries:
 - requests
 - python-dotenv
 - Flask-SocketIO
+- pyppeteer
+- aiohttp
 
 ## Contributing
 
