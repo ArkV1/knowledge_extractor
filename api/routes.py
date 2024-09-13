@@ -1,4 +1,3 @@
-
 import os
 from flask import Blueprint, request, jsonify, send_file
 from werkzeug.utils import secure_filename
@@ -86,12 +85,13 @@ def compare():
 def convert_to_pdf():
     data = request.json
     url = data.get('url')
+    orientation = data.get('orientation', 'portrait')
 
     if not url:
         return jsonify({"error": "URL is required"}), 400
 
     try:
-        filename = start_conversion(url)
+        filename = start_conversion(url, orientation)
         pdf_path = os.path.join('downloads', filename)
         if not os.path.exists(pdf_path):
             return jsonify({"error": "PDF generation failed"}), 500

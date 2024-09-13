@@ -26,29 +26,62 @@ async def create_pdf(url, pdf_path, orientation='portrait'):
                 '--disable-setuid-sandbox',
                 f'--disable-extensions-except={extension_path}',
                 f'--load-extension={extension_path}',
-                '--disable-gpu',  # Try disabling GPU acceleration
-                '--no-zygote',    # Try running without the zygote process
+                '--disable-gpu',
+                '--no-zygote',
             ],
-            ignoreDefaultArgs=['--enable-automation'],  # Disable automation flag
-            timeout=60000  # Increase timeout to 60 seconds
+            ignoreDefaultArgs=['--enable-automation'],
+            timeout=60000
         )
 
         page = await browser.newPage()
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
 
+        # Set viewport size based on orientation
+        if orientation == 'landscape':
+            await page.setViewport({'width': 1920, 'height': 1080})
+        else:
+            await page.setViewport({'width': 1080, 'height': 1920})
+
         await page.goto(url, {'waitUntil': 'networkidle0', 'timeout': 60000})
         await page.waitFor(5000)
 
+        # Set page size and orientation
+        page_width = '297mm' if orientation == 'landscape' else '210mm'
+        page_height = '210mm' if orientation == 'landscape' else '297mm'
+
+        # Add CSS for page orientation and to show all content
+        await page.evaluate(f'''() => {{
+            const style = document.createElement('style');
+            style.textContent = `
+                @page {{
+                    size: {page_width} {page_height};
+                    margin: 0;
+                }}
+                body {{
+                    width: {page_width};
+                    height: {page_height};
+                    margin: 0;
+                    -webkit-print-color-adjust: exact;
+                }}
+                * {{
+                    -webkit-print-color-adjust: exact;
+                }}
+            `;
+            document.head.appendChild(style);
+        }}''')
+
         await page.pdf({
             'path': pdf_path,
-            'format': 'A4',
+            'width': page_width,
+            'height': page_height,
             'printBackground': True,
-            'landscape': orientation == 'landscape'
+            'preferCSSPageSize': True,
         })
+
+        extension_logger.info(f"PDF created successfully: {pdf_path} with orientation: {orientation}")
 
     except BrowserError as e:
         extension_logger.error(f"Browser error: {str(e)}")
-        # You might want to implement a retry mechanism here
     except TimeoutError:
         extension_logger.error("Browser launch or navigation timed out")
     except Exception as e:
