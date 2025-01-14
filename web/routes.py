@@ -1,4 +1,7 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, send_file
+import os
+import requests
+import zipfile
 from features.pdf_converter import update_extension
 from logger import app_logger
 
@@ -26,3 +29,16 @@ def update_extensions():
     except Exception as e:
         app_logger.error(f"Error in update_extensions route: {str(e)}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+@web_bp.route('/syntax-highlighter')
+def syntax_highlighter_page():
+    return render_template('syntax_highlighter.html')
+
+
+@web_bp.route('/sql-highlighter')
+def sql_highlighter_page():
+    return render_template('sql_highlighter.html')
+
+@web_bp.route('/webcam')
+def webcam():
+    return render_template('webcam.html')

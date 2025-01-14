@@ -24,23 +24,32 @@ def download_audio(video_url, output_dir="downloads", socketio=None):
     def progress_hook(d):
         if socketio:
             if d['status'] == 'downloading':
-                percent = d['_percent_str']
-                speed = d['_speed_str']
-                eta = d['_eta_str']
-                socketio.emit('progress', {'status': f'Downloading: {percent} (Speed: {speed}, ETA: {eta})'})
+                percent = d['_percent_str'].strip()
+                speed = d['_speed_str'].strip()
+                eta = d['_eta_str'].strip()
+                
+                # Remove ANSI color codes
+                percent = re.sub(r'\x1b\[[0-9;]*m', '', percent)
+                speed = re.sub(r'\x1b\[[0-9;]*m', '', speed)
+                eta = re.sub(r'\x1b\[[0-9;]*m', '', eta)
+                
+                progress_message = f"Downloading: {percent}"
+                socketio.emit('progress', {'status': progress_message})
+                socketio.emit('download_speed', {'speed': f"Speed: {speed}"})
+                socketio.emit('eta', {'eta': f"ETA: {eta}"})
             elif d['status'] == 'finished':
                 socketio.emit('progress', {'status': 'Download finished, now converting...'})
 
     # Set up YouTube-DL options
     ydl_opts = {
         'format': 'bestaudio/best',
-        'outtmpl': os.path.join(output_dir, '%(title)s.%(ext)s'),  # Save with title and correct extension
+        'outtmpl': os.path.join(output_dir, '%(title)s.%(ext)s'),
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'progress_hooks': [progress_hook],  # Attach progress hook
+        'progress_hooks': [progress_hook],
     }
 
     try:
@@ -48,18 +57,15 @@ def download_audio(video_url, output_dir="downloads", socketio=None):
             if socketio:
                 socketio.emit('progress', {'status': 'Starting download...'})
             
-            # Download the video/audio file
             info_dict = ydl.extract_info(video_url, download=True)
             
-            # Prepare filename for mp3
             file_path = ydl.prepare_filename(info_dict)
-            file_path = os.path.splitext(file_path)[0] + '.mp3'  # Ensure it is .mp3
+            file_path = os.path.splitext(file_path)[0] + '.mp3'
             
-            # Check if the converted file exists
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"The file {file_path} was not found after download and conversion.")
             
-            return file_path  # Return the valid file path for the mp3 file
+            return file_path
 
     except Exception as e:
         if socketio:

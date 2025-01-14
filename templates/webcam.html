@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Webcam Capture</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <video id="video" width="640" height="480" autoplay></video>
+            <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+        </div>
+        <div class="col-md-4">
+            <button id="capture" class="btn btn-primary mb-3">Take Photo</button>
+            <div id="photos" class="d-flex flex-column gap-2">
+                <!-- Captured photos will appear here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const photos = document.getElementById('photos');
+const captureButton = document.getElementById('capture');
+const ctx = canvas.getContext('2d');
+
+// Access webcam
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+        video.srcObject = stream;
+    })
+    .catch(err => {
+        console.error('Error accessing webcam:', err);
+        alert('Error accessing webcam. Please make sure you have granted camera permissions.');
+    });
+
+// Capture photo
+captureButton.addEventListener('click', () => {
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL('image/png');
+    img.className = 'img-fluid mb-2';
+    photos.insertBefore(img, photos.firstChild);
+});
+</script>
+{% endblock %}

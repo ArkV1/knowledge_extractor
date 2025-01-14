@@ -92,29 +92,23 @@
             </div>
 
             <div id="results-container" class="flex flex-col mt-4 space-y-4">
-                <div id="youtube-result-box"
-                    class="bg-gray-50 p-4 border border-gray-200 rounded-lg w-full min-h-[200px]">
+                <div id="youtube-result-box" class="result-box bg-gray-50 p-4 border border-gray-200 rounded-lg w-full min-h-[200px]">
                     <div class="flex justify-between items-center mb-2 h-8">
                         <h4 class="font-bold text-gray-800">YouTube Transcript:</h4>
                         <div class="flex items-center space-x-2">
-                            <button
-                                class="refresh-button px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hidden">Refresh</button>
+                            <button class="refresh-button px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hidden">Refresh</button>
+                            <button class="copy-button px-2 py-1 bg-blue-500 text-white rounded-md text-sm">Copy</button>
                         </div>
                     </div>
                     <pre id="youtube-result" class="whitespace-pre-wrap w-full"></pre>
                 </div>
 
-                <div id="whisper-result-box"
-                    class="bg-gray-50 p-4 border border-gray-200 rounded-lg hidden w-full min-h-[200px]">
+                <div id="whisper-result-box" class="result-box bg-gray-50 p-4 border border-gray-200 rounded-lg hidden w-full min-h-[200px]">
                     <div class="flex justify-between items-center mb-2 h-8">
                         <h4 class="font-bold text-gray-800">Whisper Transcript:</h4>
                         <div class="flex items-center space-x-2">
-                            <button
-                                class="refresh-button px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hidden">Refresh</button>
-                            <button id="compare-back-button-side-by-side"
-                                class="btn px-2 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-300 hidden">
-                                Back to Transcripts
-                            </button>
+                            <button class="refresh-button px-2 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hidden">Refresh</button>
+                            <button class="copy-button px-2 py-1 bg-blue-500 text-white rounded-md text-sm">Copy</button>
                         </div>
                     </div>
                     <pre id="whisper-result" class="whitespace-pre-wrap w-full"></pre>
@@ -141,5 +135,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/main.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/prism-live/customPrismLive-master/src/prism-live.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/syntaxHighlighter.js') }}" type="module"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='js/prism-live/customPrismLive-master/prism-live.css') }}">
 {% endblock %}

@@ -1,0 +1,1 @@
+-L 4 --charset ascii -I "venv|__pycache__|*.pyc|*.pyo|*.pyd|.git|.idea|.vscode|*.egg-info" --dirsfirst

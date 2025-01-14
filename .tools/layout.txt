@@ -1,0 +1,99 @@
+Layout extraction started at: 2024-10-10 06:22:58
+
+.
+|-- api
+|   `-- routes.py
+|-- downloads
+|   |-- https_docs.hudieverything.com_docs_intro.pdf
+|   |-- https_medium.com_stackademic_google-disturbs-the-python-community-core-developers-forced-to-leave-after-30-years-79c3a968667a.pdf
+|   |-- https_stackoverflow.com_questions_54749342_valueerror-signal-only-works-in-main-thread-when-using-stomp.pdf
+|   |-- https_stackoverflow.com_questions_54956906_puppeteer-how-to-change-orientation-of-some-pages-in-a-document.pdf
+|   |-- https_www.google.com_searchclientfirefox-b-dqtext.pdf
+|   |-- https_www.jenkins.io.pdf
+|   `-- https_www.youtube.com_watchviInUBOVeBCclistPLn6ydEOx94WqZjaZYxCZkdNs0nKOnfyEu.pdf
+|-- extensions
+|   `-- i-still-dont-care-about-cookies
+|       |-- _locales
+|       |   |-- bg
+|       |   |-- cs
+|       |   |-- da
+|       |   |-- de
+|       |   |-- en
+|       |   |-- es
+|       |   |-- fr
+|       |   |-- hr
+|       |   |-- hu
+|       |   |-- it
+|       |   |-- ja
+|       |   |-- lt
+|       |   |-- nb
+|       |   |-- nl
+|       |   |-- nn
+|       |   |-- no
+|       |   |-- pl
+|       |   |-- pt
+|       |   |-- ro
+|       |   |-- ru
+|       |   |-- sk
+|       |   |-- sv
+|       |   |-- uk
+|       |   `-- zh_CN
+|       |-- _metadata
+|       |   `-- generated_indexed_rulesets
+|       |-- data
+|       |   |-- css
+|       |   |-- js
+|       |   |-- menu
+|       |   |-- background.html
+|       |   |-- background.js
+|       |   |-- hotreload.js
+|       |   |-- options.html
+|       |   |-- options.js
+|       |   `-- rules.js
+|       |-- icons
+|       |   |-- 128.png
+|       |   |-- 16.png
+|       |   |-- 32.png
+|       |   `-- 48.png
+|       |-- LICENSE
+|       |-- manifest.json
+|       |-- manifest_v2.json
+|       |-- manifest_v3.json
+|       `-- rules.json
+|-- features
+|   |-- pdf_converter.py
+|   |-- syntax_highlighter.py
+|   `-- transcription.py
+|-- images
+|   `-- preview.png
+|-- logs
+|   |-- app.log
+|   `-- extension.log
+|-- static
+|   `-- js
+|       |-- prism-live
+|       |   `-- customPrismLive-master
+|       |-- comparisonManager.js
+|       |-- elements.js
+|       |-- main.js
+|       |-- socketManager.js
+|       |-- syntaxHighlighter.js
+|       |-- transcriptionManager.js
+|       `-- uiManager.js
+|-- templates
+|   |-- base.html
+|   |-- history.html
+|   |-- index.html
+|   |-- sql_highlighter.html
+|   |-- syntax_highlighter.html
+|   |-- transcription.html
+|   `-- website_to_pdf.html
+|-- web
+|   |-- routes.py
+|   `-- socketio.py
+|-- README.md
+|-- app.py
+|-- logger.py
+`-- requirements.txt
+
+46 directories, 49 files

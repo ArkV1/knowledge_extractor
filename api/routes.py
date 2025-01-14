@@ -1,5 +1,7 @@
 import os
 from flask import Blueprint, request, jsonify, send_file, current_app as app
+import requests
+import zipfile
 from werkzeug.utils import secure_filename
 from web.socketio import socketio
 from features.transcription import (
@@ -7,8 +9,12 @@ from features.transcription import (
     download_audio, extract_video_id, highlight_differences
 )
 from features.pdf_converter import get_extension_version, start_conversion
+from features.syntax_highlighter import update_prism_live_logic
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+import sqlparse
+from sqlparse.exceptions import SQLParseError
 
 executor = ThreadPoolExecutor(max_workers=2)
 
@@ -44,6 +50,18 @@ def transcribe():
             socketio.emit('progress', {'status': f'Transcribing with Whisper ({whisper_model} model)...'})
             whisper_result = transcribe_with_whisper(audio_file, whisper_model)
             socketio.emit('progress', {'status': 'Whisper transcription complete.'})
+
+        # # Save to history
+        # history = app.cache.get('transcription_history', [])
+        # history.append({
+        #     'url': url,
+        #     'method': method,
+        #     'whisper_model': whisper_model,
+        #     'youtube_result': youtube_result,
+        #     'whisper_result': whisper_result,
+        #     'timestamp': datetime.utcnow().isoformat()
+        # })
+        # app.cache.set('transcription_history', history)
 
         socketio.emit('progress', {'status': 'Transcription complete.'})
         return jsonify({'youtube_result': youtube_result, 'whisper_result': whisper_result})
@@ -124,3 +142,15 @@ def get_extension_version_api():
         return jsonify({"version": version})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# History Route
+@api_bp.route("/api/history", methods=['GET'])
+def get_history():
+    history = app.cache.get('transcription_history', [])
+    return jsonify({'history': history})
+
+# Update Prism Live
+@api_bp.route('/api/update-prism-live', methods=['POST'])
+def update_prism_live():
+    result = update_prism_live_logic()
+    return jsonify(result)

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}
+Prism Live: Syntax Highlighter
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://prismjs.com/themes/prism.css">
+<link rel="stylesheet" href="https://prismjs.com/plugins/line-numbers/prism-line-numbers.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='js/prism-live/customPrismLive-master/prism-live.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="main-container"
+    class="bg-white shadow-md rounded-lg p-8 max-w-2xl mx-auto transition-all duration-500 ease-in-out">
+    <h1 class="text-2xl font-bold mb-6 text-center">Live Syntax Highlighter</h1>
+    <div class="w-full mx-auto">
+        <section class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-700">Code Editor</h2>
+                <span id="charCount" class="text-sm text-gray-500">0 characters</span>
+            </div>
+            <div class="relative w-full">
+                <textarea id="codeEditor"
+                    class="prism-live fill line-numbers w-full h-64 p-4 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+            </div>
+            <div class="mt-4">
+                <label for="languageSelector" class="block text-sm font-medium text-gray-700 mb-2">Select
+                    Language:</label>
+                <select id="languageSelector"
+                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="html">HTML</option>
+                    <option value="css">CSS</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python</option>
+                </select>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://blissfuljs.com/bliss.shy.min.js"></script>
+<script src="https://prismjs.com/prism.js"></script>
+<script src="https://prismjs.com/plugins/line-numbers/prism-line-numbers.js"></script>
+<script
+    src="{{ url_for('static', filename='js/prism-live/customPrismLive-master/src/prism-live.js') }}?load=markup,css,javascript,python"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const codeEditor = document.getElementById('codeEditor');
+        const languageSelector = document.getElementById('languageSelector');
+        const mainContainer = document.getElementById('main-container');
+        const charCount = document.getElementById('charCount');
+        const SYMBOL_THRESHOLD = 750;
+
+        function adjustContainerSize() {
+            if (codeEditor.value.length > SYMBOL_THRESHOLD) {
+                mainContainer.style.maxWidth = '100%';
+                mainContainer.classList.remove('max-w-2xl');
+                mainContainer.classList.add('w-full');
+            } else {
+                mainContainer.style.maxWidth = '42rem';
+                mainContainer.classList.remove('w-full');
+                mainContainer.classList.add('max-w-2xl');
+            }
+        }
+
+        function updateCharCount() {
+            const count = codeEditor.value.length;
+            charCount.textContent = `${count} character${count !== 1 ? 's' : ''}`;
+        }
+
+        languageSelector.addEventListener('change', function () {
+            codeEditor.className = `prism-live language-${this.value} fill line-numbers w-full h-64 p-4 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500`;
+            Prism.highlightElement(codeEditor);
+        });
+
+        // Set initial language
+        codeEditor.className = 'prism-live language-html fill line-numbers w-full h-64 p-4 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500';
+
+        // Initialize Prism
+        Prism.highlightAll();
+
+        // Add input event listener
+        codeEditor.addEventListener('input', function () {
+            console.log('Input event triggered');
+            Prism.highlightElement(codeEditor);
+            adjustContainerSize();
+            updateCharCount();
+        });
+
+        // Initial adjustment and char count
+        setTimeout(() => {
+            adjustContainerSize();
+            updateCharCount();
+        }, 0);
+
+        // MutationObserver to watch for changes in the codeEditor's content
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                    adjustContainerSize();
+                    updateCharCount();
+                }
+            });
+        });
+
+        observer.observe(codeEditor, { childList: true, characterData: true, subtree: true });
+    });
+</script>
+{% endblock %}

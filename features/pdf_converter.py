@@ -49,8 +49,132 @@ async def create_pdf(url, pdf_path, orientation='portrait', zoom=1):
 
         extension_logger.debug(f"Setting viewport to width: {viewport_width}, height: {viewport_height}, zoom: {zoom}")
         await page.setViewport({'width': viewport_width, 'height': viewport_height})
-        await page.goto(url, {'waitUntil': 'networkidle0', 'timeout': 12000})
-        await page.waitFor(5000)
+        
+        # Intercept and block certain requests
+        await page.setRequestInterception(True)
+        page.on('request', lambda req: asyncio.ensure_future(intercept_request(req)))
+        
+        # Disable JavaScript execution
+        await page.setJavaScriptEnabled(False)
+        
+        await page.goto(url, {'waitUntil': 'networkidle0', 'timeout': 60000})
+
+        # Disable infinite scrolling and dynamic content loading
+        await page.evaluate('''
+            () => {
+                // Disable scroll event listeners
+                window.addEventListener('scroll', function(e) {
+                    e.stopPropagation();
+                }, true);
+
+                // Disable IntersectionObserver
+                window.IntersectionObserver = class FakeIntersectionObserver {
+                    observe() {}
+                    unobserve() {}
+                    disconnect() {}
+                };
+
+                // Disable setTimeout and setInterval
+                window.setTimeout = function() {};
+                window.setInterval = function() {};
+
+                // Disable fetch and XMLHttpRequest
+                window.fetch = function() { return new Promise(() => {}); };
+                window.XMLHttpRequest = function() { 
+                    return {
+                        open: function() {},
+                        send: function() {}
+                    };
+                };
+            }
+        ''')
+
+        # Single, fast scroll to the bottom of the page
+        await page.evaluate('''
+            async () => {
+                window.scrollTo(0, document.body.scrollHeight);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                window.scrollTo(0, 0);
+            }
+        ''')
+
+        # Remove or adjust problematic elements
+        await page.evaluate('''
+            () => {
+                // Function to check if an element is fixed or sticky
+                const isFixedOrSticky = (element) => {
+                    const style = window.getComputedStyle(element);
+                    return style.position === 'fixed' || style.position === 'sticky';
+                };
+
+                // Remove fixed and sticky elements
+                const allElements = document.body.getElementsByTagName('*');
+                for (let el of allElements) {
+                    if (isFixedOrSticky(el)) {
+                        el.remove();
+                    }
+                }
+
+                // Remove overflow: hidden from body and html
+                document.body.style.overflow = 'visible';
+                document.documentElement.style.overflow = 'visible';
+
+                // Ensure all content is visible
+                document.body.style.height = 'auto';
+                document.body.style.width = 'auto';
+
+                // Additional CSS to ensure no fixed or sticky elements remain
+                const style = document.createElement('style');
+                style.textContent = `
+                    * {
+                        position: static !important;
+                        top: auto !important;
+                        left: auto !important;
+                        right: auto !important;
+                        bottom: auto !important;
+                        z-index: auto !important;
+                        transform: none !important;
+                    }
+                    body, html {
+                        height: auto !important;
+                        width: auto !important;
+                        overflow: visible !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        ''')
+
+        # Wait for images to load and retry for those that fail
+        await page.evaluate('''
+            async () => {
+                const images = Array.from(document.querySelectorAll('img'));
+                await Promise.all(images.map(img => {
+                    if (img.complete) return;
+                    return new Promise((resolve) => {
+                        const timeout = setTimeout(() => resolve(), 30000);  // 30 second timeout
+                        img.addEventListener('load', () => {
+                            clearTimeout(timeout);
+                            resolve();
+                        });
+                        img.addEventListener('error', () => {
+                            img.src = img.src;  // Retry loading
+                            img.addEventListener('load', () => {
+                                clearTimeout(timeout);
+                                resolve();
+                            });
+                            img.addEventListener('error', () => {
+                                clearTimeout(timeout);
+                                resolve();
+                            });
+                        });
+                    });
+                }));
+            }
+        ''')
+
+        # Additional wait time
+        await page.waitFor(2000)
 
         # Set page size and orientation
         if orientation == 'landscape':
@@ -97,10 +221,6 @@ async def create_pdf(url, pdf_path, orientation='portrait', zoom=1):
         await page.pdf(pdf_options)
 
         extension_logger.info(f"PDF created successfully: {pdf_path} with orientation: {orientation} and zoom: {zoom}")
-    except BrowserError as e:
-        extension_logger.error(f"Browser error: {str(e)}")
-    except TimeoutError:
-        extension_logger.error("Browser launch or navigation timed out")
     except Exception as e:
         extension_logger.error(f"Error creating PDF: {str(e)}")
     finally:
@@ -216,3 +336,20 @@ def get_extension_version():
             manifest = json.load(f)
             return manifest.get('version', 'Unknown')
     return 'Not installed'
+
+async def intercept_request(request):
+    # Block requests that might trigger new content loading
+    blocked_resource_types = [
+        'image', 'media', 'font', 'texttrack', 'object', 'beacon', 
+        'csp_report', 'imageset'
+    ]
+    blocked_urls = [
+        'google-analytics', 'doubleclick.net', 'facebook', 
+        'twitter', 'ads', 'tracking'
+    ]
+    
+    if (request.resourceType in blocked_resource_types or
+        any(url in request.url for url in blocked_urls)):
+        await request.abort()
+    else:
+        await request.continue_()

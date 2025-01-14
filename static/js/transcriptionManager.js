@@ -133,8 +133,25 @@ export function initTranscriptionManager(elements, managers) {
         }
     }
 
+    function handleCopy(event) {
+        const button = event.target;
+        const resultBox = button.closest('.result-box');
+        if (resultBox) {
+            const textToCopy = resultBox.querySelector('pre').innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    }
+
     return {
         handleFormSubmit,
-        handleRefresh
+        handleRefresh,
+        handleCopy
     };
 }

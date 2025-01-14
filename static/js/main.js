@@ -3,7 +3,6 @@ import { initUIManager } from './uiManager.js';
 import { initTranscriptionManager } from './transcriptionManager.js';
 import { initComparisonManager } from './comparisonManager.js';
 import { initSocketManager } from './socketManager.js';
-import { initExtensionManager } from './extensionManager.js';
 
 const YouTubeTranscriber = (function () {
     function init() {
@@ -19,7 +18,6 @@ const YouTubeTranscriber = (function () {
                     { name: 'transcriptionManager', init: initTranscriptionManager, args: [elements] },
                     { name: 'comparisonManager', init: initComparisonManager, args: [elements] },
                     { name: 'socketManager', init: initSocketManager, args: [elements] },
-                    { name: 'extensionManager', init: initExtensionManager, args: [] }
                 ];
 
                 const initializedManagers = {};

@@ -147,6 +147,7 @@ export function initUIManager(elements) {
         safelySetStyle(elements.mainContainer, 'maxWidth', INITIAL_WIDTH);
         safelySetStyle(elements.resultsSection, 'width', '100%');
         safelySetStyle(elements.resultsContainer, 'width', '100%');
+        
     }
 
     function showComparisonResult(mode) {
@@ -262,6 +263,10 @@ export function initUIManager(elements) {
                 comparisonManager.handleCompareBack();
             });
         }
+
+        document.querySelectorAll('.copy-button').forEach(button => {
+            button.addEventListener('click', transcriptionManager.handleCopy);
+        });
     }
 
     // Initialize

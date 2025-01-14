@@ -7,11 +7,38 @@
     <title>{% block title %}Our Tools{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    {% block styles %}{% endblock %}
+    <style>
+        @media (max-width: 640px) {
+            #side-panel {
+                position: fixed;
+                left: -256px;
+                transition: left 0.3s ease-in-out;
+                height: 100vh;
+                overflow-y: auto;
+                z-index: 40;
+            }
+
+            #side-panel.open {
+                left: 0;
+            }
+
+            #sidebar-toggle {
+                transition: left 0.3s ease-in-out;
+                z-index: 50;
+            }
+
+            #side-panel.open+div #sidebar-toggle {
+                left: 195px;
+                /* 256px (sidebar width) + 12px (for spacing) */
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-gray-100">
     <div class="flex h-screen">
-        <div id="side-panel" class="w-64 bg-white shadow-lg p-4 flex flex-col">
+        <div id="side-panel" class="w-64 bg-white shadow-lg p-4 flex flex-col h-full">
             <div class="flex-grow">
                 <h2 id="history" class="text-lg font-semibold mb-2">Tools</h2>
                 <ul class="space-y-2">
@@ -21,23 +48,138 @@
                             class="text-blue-600 hover:text-blue-800">Video Transcription</a></li>
                     <li><a href="{{ url_for('web.website_to_pdf_page') }}"
                             class="text-blue-600 hover:text-blue-800">Website to PDF</a></li>
+                    <li><a href="{{ url_for('web.syntax_highlighter_page') }}"
+                            class="text-blue-600 hover:text-blue-800">Code Syntax Highlighter</a></li>
+                    <li><a href="{{ url_for('web.sql_highlighter_page') }}"
+                            class="text-blue-600 hover:text-blue-800">SQL Syntax Highlighter</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('web.webcam') }}">Webcam</a>
+                    </li>
                 </ul>
             </div>
+
+            <!--
+                <div class="mt-4">
+                    <h2 class="text-lg font-semibold mb-2">Transcription History</h2>
+                    <ul id="history-list" class="space-y-2 overflow-y-auto max-h-40">
+                </ul>
+            </div>
+            -->
+
             <div>
                 <h2 id="settings" class="text-lg font-semibold mb-2">Settings</h2>
                 <div class="space-y-2">
+                    <button id="update-prism-live" class="text-blue-600 hover:text-blue-800">Update Prism Live</button>
                     <button id="update-extensions" class="text-blue-600 hover:text-blue-800">Update Extensions</button>
                     <p id="extension-version" class="text-sm text-gray-600">Extension version: Loading...</p>
                 </div>
             </div>
+
         </div>
         <div class="flex-1 p-8 overflow-y-auto">
+            <button id="sidebar-toggle" class="sm:hidden fixed top-4 left-4 bg-white p-2 rounded-md shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
             {% block content %}{% endblock %}
         </div>
     </div>
     {% block scripts %}{% endblock %}
     <script src="{{ url_for('static', filename='js/main.js') }}" type="module"></script>
-    <script src="{{ url_for('static', filename='js/extensionManager.js') }}" type="module"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const updateButton = document.getElementById('update-extensions');
+            const versionDisplay = document.getElementById('extension-version');
+
+            function updateVersionDisplay() {
+                if (!versionDisplay) return;
+
+                fetch('/api/extension-version')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        versionDisplay.textContent = `Extension version: ${data.version}`;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching extension version:', error);
+                        versionDisplay.textContent = 'Extension version: Error';
+                    });
+            }
+
+            if (updateButton) {
+                updateButton.addEventListener('click', () => {
+                    updateButton.disabled = true;
+                    updateButton.textContent = 'Updating...';
+
+                    fetch('/update-extensions', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                if (versionDisplay) {
+                                    versionDisplay.textContent = `Extension version: ${data.version}`;
+                                }
+                                alert('Extension updated successfully!');
+                            } else {
+                                alert('Failed to update extension: ' + data.error);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error updating extension:', error);
+                            alert('An error occurred while updating the extension.');
+                        })
+                        .finally(() => {
+                            updateButton.disabled = false;
+                            updateButton.textContent = 'Update Extensions';
+                        });
+                });
+            }
+
+            updateVersionDisplay();
+
+            document.getElementById('update-prism-live').addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/api/update-prism-live', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message || 'Prism Live updated successfully!');
+                    } else {
+                        alert(`Error: ${result.error}`);
+                    }
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                }
+            });
+
+            // Add sidebar toggle functionality
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidePanel = document.getElementById('side-panel');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidePanel.classList.toggle('open');
+            });
+
+            // Close sidebar when clicking outside on small screens
+            document.addEventListener('click', (event) => {
+                if (window.innerWidth <= 640 && !sidePanel.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                    sidePanel.classList.remove('open');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
